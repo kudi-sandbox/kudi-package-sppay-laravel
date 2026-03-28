@@ -1,1 +1,1 @@
-{"version":2,"defects":[],"times":{"Mboateng\\Sppay\\Tests\\SppayServiceProviderTest::test_client_is_registered":0.042,"Mboateng\\Sppay\\Tests\\SppayServiceProviderTest::test_facade_resolves":0}}
+{"version":2,"defects":[],"times":{"Mboateng\\Sppay\\Tests\\SppayServiceProviderTest::test_client_is_registered":0.045,"Mboateng\\Sppay\\Tests\\SppayServiceProviderTest::test_facade_resolves":0}}

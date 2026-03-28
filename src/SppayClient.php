@@ -16,18 +16,30 @@ class SppayClient implements SppayClientContract
 
     protected ?string $accessToken = null;
 
+    protected ?string $oauthUrl = null;
+
+    /**
+     * @var array<string, string|null>
+     */
+    protected array $oauthCredentials = [];
+
     /**
      * @param  array<string, mixed>  $guzzleConfig  Extra options passed to Guzzle (e.g. verify, proxy).
+     * @param  array<string, string|null>  $oauthCredentials  client_id, client_secret, username, password
      */
     public function __construct(
         string $baseUrl,
         ?string $accessToken = null,
         float $timeout = 30.0,
         float $connectTimeout = 10.0,
-        array $guzzleConfig = []
+        array $guzzleConfig = [],
+        ?string $oauthUrl = null,
+        array $oauthCredentials = []
     ) {
         $this->baseUrl = rtrim($baseUrl, '/');
         $this->accessToken = $accessToken;
+        $this->oauthUrl = $oauthUrl !== null && $oauthUrl !== '' ? rtrim($oauthUrl, '/') : null;
+        $this->oauthCredentials = $oauthCredentials;
 
         $this->http = new Client(array_merge([
             RequestOptions::TIMEOUT => $timeout,
@@ -55,9 +67,35 @@ class SppayClient implements SppayClientContract
      */
     public function oauthToken(array $payload): array
     {
-        return $this->request('POST', '/oauth/token', [
+        return $this->send('POST', $this->oauthEndpoint(), [
             RequestOptions::JSON => $payload,
         ], false);
+    }
+
+    /**
+     * Password grant using config keys SPPAY_CLIENT_ID, SPPAY_CLIENT_SECRET, SPPAY_USERNAME, SPPAY_PASSWORD.
+     *
+     * @return array<string, mixed>
+     */
+    public function oauthPasswordGrant(): array
+    {
+        $required = ['client_id', 'client_secret', 'username', 'password'];
+        foreach ($required as $key) {
+            $value = $this->oauthCredentials[$key] ?? null;
+            if ($value === null || $value === '') {
+                throw new SppayRequestException(
+                    'SPPay OAuth credentials are incomplete. Set SPPAY_CLIENT_ID, SPPAY_CLIENT_SECRET, SPPAY_USERNAME, and SPPAY_PASSWORD in config (typically via .env). Missing or empty: '.$key
+                );
+            }
+        }
+
+        return $this->oauthToken([
+            'grant_type' => 'password',
+            'client_id' => $this->oauthCredentials['client_id'],
+            'client_secret' => $this->oauthCredentials['client_secret'],
+            'username' => $this->oauthCredentials['username'],
+            'password' => $this->oauthCredentials['password'],
+        ]);
     }
 
     /**
@@ -203,11 +241,29 @@ class SppayClient implements SppayClientContract
         ]);
     }
 
+    protected function oauthEndpoint(): string
+    {
+        if ($this->oauthUrl !== null) {
+            return $this->oauthUrl;
+        }
+
+        return $this->baseUrl.'/oauth/token';
+    }
+
     /**
      * @param  array<string, mixed>  $options  Guzzle request options
      * @return array<string, mixed>
      */
     protected function request(string $method, string $uri, array $options = [], bool $withBearer = true): array
+    {
+        return $this->send($method, $this->baseUrl.$uri, $options, $withBearer);
+    }
+
+    /**
+     * @param  array<string, mixed>  $options
+     * @return array<string, mixed>
+     */
+    protected function send(string $method, string $url, array $options = [], bool $withBearer = true): array
     {
         if ($withBearer) {
             if ($this->accessToken === null || $this->accessToken === '') {
@@ -217,8 +273,6 @@ class SppayClient implements SppayClientContract
                 'Authorization' => 'Bearer '.$this->accessToken,
             ]);
         }
-
-        $url = $this->baseUrl.$uri;
 
         try {
             $response = $this->http->request($method, $url, $options);

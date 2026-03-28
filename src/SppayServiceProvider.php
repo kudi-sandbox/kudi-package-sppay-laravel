@@ -19,6 +19,14 @@ class SppayServiceProvider extends ServiceProvider
                 $config['access_token'] ?? null,
                 (float) ($config['timeout'] ?? 30),
                 (float) ($config['connect_timeout'] ?? 10),
+                [],
+                $config['oauth_url'] ?? null,
+                [
+                    'client_id' => $config['client_id'] ?? null,
+                    'client_secret' => $config['client_secret'] ?? null,
+                    'username' => $config['username'] ?? null,
+                    'password' => $config['password'] ?? null,
+                ],
             );
         });
 

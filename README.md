@@ -22,28 +22,61 @@ php artisan vendor:publish --tag=sppay-config
 
 ## Configuration
 
-Environment variables (see `config/sppay.php`):
+Values are read from `.env` through `config/sppay.php` (use `config('sppay.*')` in code).
+
+### Environment variables
 
 | Variable | Description | Default |
 |----------|-------------|---------|
 | `SPPAY_BASE_URL` | API host, no trailing slash | `https://engine.sppay.dev` |
-| `SPPAY_ACCESS_TOKEN` | Bearer token from `oauthToken()` | — |
+| `SPPAY_OAUTH_URL` | Full URL for token endpoint (optional) | — (uses `{SPPAY_BASE_URL}/oauth/token`) |
+| `SPPAY_CLIENT_ID` | OAuth client id | — |
+| `SPPAY_CLIENT_SECRET` | OAuth client secret | — |
+| `SPPAY_USERNAME` | OAuth username | — |
+| `SPPAY_PASSWORD` | OAuth password | — |
+| `SPPAY_ACCESS_TOKEN` | Bearer token (if you already have one) | — |
 | `SPPAY_TIMEOUT` | Request timeout (seconds) | `30` |
 | `SPPAY_CONNECT_TIMEOUT` | Connect timeout (seconds) | `10` |
+
+Example `.env` (use your own secrets; do not commit real credentials):
+
+```env
+SPPAY_BASE_URL=https://engine.sppay.dev
+SPPAY_OAUTH_URL=https://engine.sppay.dev/oauth/token
+SPPAY_CLIENT_ID=your-client-id
+SPPAY_CLIENT_SECRET=your-client-secret
+SPPAY_USERNAME=your@email.com
+SPPAY_PASSWORD=your-password
+```
+
+Laravel loads these into `config('sppay.base_url')`, `config('sppay.oauth_url')`, `config('sppay.client_id')`, etc. You do not need a separate `services.php` entry unless you prefer to duplicate keys there.
 
 ## Usage
 
 ### Facade
+
+**Option A — password grant using `.env` (recommended when credentials live in config):**
+
+```php
+use Mboateng\Sppay\Facades\Sppay;
+
+$response = Sppay::oauthPasswordGrant();
+Sppay::setAccessToken($response['access_token']);
+
+$transactions = Sppay::listTransactions(['page_size' => 10]);
+```
+
+**Option B — build the payload yourself:**
 
 ```php
 use Mboateng\Sppay\Facades\Sppay;
 
 $token = Sppay::oauthToken([
     'grant_type' => 'password',
-    'client_id' => config('services.sppay.client_id'),
-    'client_secret' => config('services.sppay.client_secret'),
-    'username' => config('services.sppay.username'),
-    'password' => config('services.sppay.password'),
+    'client_id' => config('sppay.client_id'),
+    'client_secret' => config('sppay.client_secret'),
+    'username' => config('sppay.username'),
+    'password' => config('sppay.password'),
 ]);
 
 Sppay::setAccessToken($token['access_token']);
@@ -89,6 +122,7 @@ $client->initiatePayment([/* ... */]);
 | Method | Endpoint |
 |--------|----------|
 | `oauthToken(array $payload)` | `POST /oauth/token` |
+| `oauthPasswordGrant()` | `POST /oauth/token` (uses `SPPAY_*` credentials from config) |
 | `validatePublicKey(array $body)` | `POST /v1/key/validate` |
 | `validatePayment(array $body)` | `POST /v1/api/payments/validate` |
 | `initiatePayment(array $body)` | `POST /v1/api/payments/initiate` |

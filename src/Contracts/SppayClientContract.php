@@ -8,6 +8,8 @@ interface SppayClientContract
 
     public function oauthToken(array $payload): array;
 
+    public function oauthPasswordGrant(): array;
+
     public function validatePublicKey(array $body): array;
 
     public function validatePayment(array $body): array;

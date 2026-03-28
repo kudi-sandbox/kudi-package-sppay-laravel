@@ -8,6 +8,7 @@ use Mboateng\Sppay\Contracts\SppayClientContract;
 /**
  * @method static \Mboateng\Sppay\SppayClient setAccessToken(?string $token)
  * @method static array oauthToken(array $payload)
+ * @method static array oauthPasswordGrant()
  * @method static array validatePublicKey(array $body)
  * @method static array validatePayment(array $body)
  * @method static array initiatePayment(array $body)
