@@ -1,0 +1,54 @@
+{
+    "name": "mboateng/sppay-laravel",
+    "description": "Laravel integration for the SPPay public API (payments, transfers, transactions, institutions, SMS).",
+    "keywords": [
+        "laravel",
+        "sppay",
+        "payments",
+        "ghana",
+        "mobile-money",
+        "api-client"
+    ],
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Michael Boateng",
+            "homepage": "https://packagist.org/users/mboateng"
+        }
+    ],
+    "require": {
+        "php": "^8.1",
+        "illuminate/support": "^10.0|^11.0|^12.0",
+        "guzzlehttp/guzzle": "^7.8"
+    },
+    "require-dev": {
+        "orchestra/testbench": "^8.0|^9.0|^10.0",
+        "phpunit/phpunit": "^10.0|^11.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Mboateng\\Sppay\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Mboateng\\Sppay\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Mboateng\\Sppay\\SppayServiceProvider"
+            ],
+            "aliases": {
+                "Sppay": "Mboateng\\Sppay\\Facades\\Sppay"
+            }
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true,
+    "scripts": {
+        "test": "phpunit"
+    }
+}
